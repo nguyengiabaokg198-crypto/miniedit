@@ -1,0 +1,10 @@
+{
+	"type": "minecraft:crafting_shapeless",
+	"category": "equipment",
+	"ingredients": [
+		"minecraft:paper",
+		"minecraft:redstone",
+		"minecraft:stick"
+	],
+	"result": { "id": "miniedit:edit_panel", "count": 1 }
+}
