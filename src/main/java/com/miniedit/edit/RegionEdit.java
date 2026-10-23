@@ -8,8 +8,8 @@ import com.miniedit.MiniEdit;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerLevel;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -21,6 +21,7 @@ public final class RegionEdit {
 	private RegionEdit() {}
 
 	public static final int MAX_DIM = 32;
+	private static final int UPDATE_FLAGS = Block.UPDATE_NEIGHBORS | Block.UPDATE_CLIENTS;
 
 	public record OpOut(boolean ok, int count, String msg) {}
 
@@ -35,9 +36,9 @@ public final class RegionEdit {
 		if (trimmed.length() > 128) {
 			return null;
 		}
-		ResourceLocation rl;
+		Identifier rl;
 		try {
-			rl = ResourceLocation.parse(trimmed);
+			rl = Identifier.parse(trimmed);
 		} catch (Exception ex) {
 			return null;
 		}
@@ -56,7 +57,7 @@ public final class RegionEdit {
 		return parseState(material) != null;
 	}
 
-	private static BlockPos[] bounds(ServerLevel level, PlayerSession session) {
+	private static BlockPos[] bounds(Level level, PlayerSession session) {
 		if (!session.selectionComplete()) {
 			return null;
 		}
@@ -74,7 +75,7 @@ public final class RegionEdit {
 		return new BlockPos[] { new BlockPos(minX, minY, minZ), new BlockPos(maxX, maxY, maxZ) };
 	}
 
-	private static BlockPos[] checkedBounds(ServerLevel level, PlayerSession session) {
+	private static BlockPos[] checkedBounds(Level level, PlayerSession session) {
 		BlockPos[] b = bounds(level, session);
 		if (b == null) {
 			return null;
@@ -87,17 +88,17 @@ public final class RegionEdit {
 		return b;
 	}
 
-	private static void placeOne(ServerLevel level, BlockPos mutable, BlockState st, List<PlayerSession.Entry> entries) {
+	private static void placeOne(Level level, BlockPos mutable, BlockState st, List<PlayerSession.Entry> entries) {
 		BlockPos pos = mutable.immutable();
 		BlockState prev = level.getBlockState(pos);
 		if (prev == st) {
 			return;
 		}
 		entries.add(new PlayerSession.Entry(pos, prev));
-		level.setBlock(pos, st, Block.UPDATE_ALL);
+		level.setBlock(pos, st, UPDATE_FLAGS, 512);
 	}
 
-	public static OpOut set(ServerLevel level, PlayerSession session, String materialId) {
+	public static OpOut set(Level level, PlayerSession session, String materialId) {
 		BlockState st = parseState(materialId);
 		if (st == null) {
 			return new OpOut(false, 0, "Không tìm thấy block: " + materialId);
@@ -115,7 +116,7 @@ public final class RegionEdit {
 		return new OpOut(true, entries.size(), "Đã đặt " + entries.size() + " block: " + materialId);
 	}
 
-	public static OpOut walls(ServerLevel level, PlayerSession session, String materialId) {
+	public static OpOut walls(Level level, PlayerSession session, String materialId) {
 		BlockState st = parseState(materialId);
 		if (st == null) {
 			return new OpOut(false, 0, "Không tìm thấy block: " + materialId);
@@ -136,7 +137,7 @@ public final class RegionEdit {
 		return new OpOut(true, entries.size(), "Đã dựng tường " + entries.size() + " block: " + materialId);
 	}
 
-	public static OpOut copy(ServerLevel level, PlayerSession session) {
+	public static OpOut copy(Level level, PlayerSession session) {
 		BlockPos[] b = checkedBounds(level, session);
 		if (b == null) {
 			return new OpOut(false, 0, "Cần chọn 2 góc (rìu) trong hộp 32×32×32");
@@ -152,12 +153,11 @@ public final class RegionEdit {
 		return new OpOut(true, copy.size(), "Đã copy " + copy.size() + " block");
 	}
 
-	public static OpOut paste(ServerLevel level, PlayerSession session, BlockPos playerPos) {
+	public static OpOut paste(Level level, PlayerSession session, BlockPos playerPos) {
 		if (!session.hasClipboard()) {
 			return new OpOut(false, 0, "Chưa copy gì (bấm nút Copy trước)");
 		}
-		BlockPos anchor = session.pos2 != null ? session.pos2.immutable()
-			: playerPos.immutable();
+		BlockPos anchor = session.pos2 != null ? session.pos2.immutable() : playerPos.immutable();
 		List<PlayerSession.Entry> entries = session.newEntries();
 		for (PlayerSession.CopyEntry ce : session.clipboard) {
 			BlockPos pos = anchor.offset(ce.dx(), ce.dy(), ce.dz());
@@ -170,20 +170,20 @@ public final class RegionEdit {
 				continue;
 			}
 			entries.add(new PlayerSession.Entry(pos, prev));
-			level.setBlock(pos, st, Block.UPDATE_ALL);
+			level.setBlock(pos, st, UPDATE_FLAGS, 512);
 		}
 		session.pushUndo(entries);
 		return new OpOut(true, entries.size(), "Đã dán " + entries.size() + " block");
 	}
 
-	public static OpOut undo(ServerLevel level, PlayerSession session) {
+	public static OpOut undo(Level level, PlayerSession session) {
 		List<PlayerSession.Entry> last = session.popUndo();
 		if (last == null) {
 			return new OpOut(false, 0, "Không có gì để hoàn tác");
 		}
 		for (int i = last.size() - 1; i >= 0; i--) {
 			PlayerSession.Entry e = last.get(i);
-			level.setBlock(e.pos(), e.prev(), Block.UPDATE_ALL);
+			level.setBlock(e.pos(), e.prev(), UPDATE_FLAGS, 512);
 		}
 		return new OpOut(true, last.size(), "Đã hoàn tác " + last.size() + " block");
 	}
@@ -192,7 +192,7 @@ public final class RegionEdit {
 	 * Headless self-test used by CI: set 3x3x3 stone, verify, undo, verify.
 	 * Returns error text on failure, null on success.
 	 */
-	public static String selfTest(ServerLevel level) {
+	public static String selfTest(Level level) {
 		level.getChunk(0, 0);
 		BlockPos a = new BlockPos(8, 70, 8);
 		BlockPos b = a.offset(2, 2, 2);
@@ -205,7 +205,7 @@ public final class RegionEdit {
 		}
 		int stones = 0;
 		for (BlockPos p : BlockPos.betweenClosed(a, b)) {
-			if (level.getBlockState(p).is(Blocks.STONE)) {
+			if (level.getBlockState(p).getBlock() == Blocks.STONE) {
 				stones++;
 			}
 		}
@@ -216,7 +216,7 @@ public final class RegionEdit {
 			}
 			int stonesAfter = 0;
 			for (BlockPos p : BlockPos.betweenClosed(a, b)) {
-				if (level.getBlockState(p).is(Blocks.STONE)) {
+				if (level.getBlockState(p).getBlock() == Blocks.STONE) {
 					stonesAfter++;
 				}
 			}

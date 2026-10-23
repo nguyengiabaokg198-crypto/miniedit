@@ -2,19 +2,26 @@ package com.miniedit.registry;
 
 import com.miniedit.MiniEdit;
 
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.core.Registry;
 
 public final class ModItems {
 	private ModItems() {}
+
+	private static Item register(String path, Item item) {
+		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM,
+			Identifier.fromNamespaceAndPath(MiniEdit.MOD_ID, path));
+		Registry.register(BuiltInRegistries.ITEM, key, item);
+		return item;
+	}
 
 	public static final Item EDIT_AXE = register("edit_axe",
 		new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
@@ -23,9 +30,9 @@ public final class ModItems {
 
 	public static final ResourceKey<CreativeModeTab> TAB_KEY = ResourceKey.create(
 		Registries.CREATIVE_MODE_TAB,
-		ResourceLocation.fromNamespaceAndPath(MiniEdit.MOD_ID, "main"));
+		Identifier.fromNamespaceAndPath(MiniEdit.MOD_ID, "main"));
 
-	public static final CreativeModeTab TAB = CreativeModeTab.builder()
+	public static final CreativeModeTab TAB = CreativeModeTab.builder(CreativeModeTab.Row.TOP, 0)
 		.title(Component.translatable("itemGroup.miniedit.main"))
 		.icon(() -> new ItemStack(EDIT_PANEL))
 		.displayItems((parameters, output) -> {
@@ -33,12 +40,6 @@ public final class ModItems {
 			output.accept(EDIT_PANEL);
 		})
 		.build();
-
-	private static Item register(String path, Item item) {
-		Registry.register(BuiltInRegistries.ITEM,
-			ResourceLocation.fromNamespaceAndPath(MiniEdit.MOD_ID, path), item);
-		return item;
-	}
 
 	public static void init() {
 		Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, TAB_KEY, TAB);

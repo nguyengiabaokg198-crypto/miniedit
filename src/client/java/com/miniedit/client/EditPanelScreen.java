@@ -7,7 +7,7 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -78,7 +78,7 @@ public class EditPanelScreen extends Screen {
 				.bounds(bx + 6 + (i * 46), ay, 44, 17).build());
 		}
 
-		// Refresh (also closes/reopens to sync state)
+		// Refresh (also syncs state)
 		this.addRenderableWidget(Button.builder(
 			Component.literal("Làm mới"),
 			b -> sendAction(EditActionPayload.OP_REQUEST_STATE, ""))
@@ -97,18 +97,17 @@ public class EditPanelScreen extends Screen {
 	}
 
 	@Override
-	public void render(GuiGraphics g, int mouseX, int mouseY, float delta) {
-		g.fill(0, 0, this.width, this.height, 0x66000000);
+	public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
 		g.fill(bx, by, bx + PANEL_W, by + PANEL_H, 0xF0121626);
-		g.renderOutline(bx, by, PANEL_W, PANEL_H, 0xFFFFC93C);
-		super.render(g, mouseX, mouseY, delta);
+		g.outline(bx, by, PANEL_W, PANEL_H, 0xFFFFC93C);
+		super.extractRenderState(g, mouseX, mouseY, delta);
 
-		g.drawCenteredString(this.font, "MINIEDIT", bx + PANEL_W / 2, by + 8, 0xFFFFC93C);
-		g.drawString(this.font, "Góc 1: " + pos1Text, bx + 8, by + 22, 0xFFECECEC);
-		g.drawString(this.font, "Góc 2: " + pos2Text, bx + 8, by + 34, 0xFFECECEC);
-		g.drawString(this.font, "Vật liệu: " + materialText, bx + 8, by + 46, 0xFF9FE7FF);
-		g.drawString(this.font, statusText, bx + 128, by + 46, 0xFF37D06C);
-		g.drawString(this.font, "Chọn 2 góc bằng Rìu, rồi bấm nút",
+		g.centeredText(this.font, "MINIEDIT", bx + PANEL_W / 2, by + 8, 0xFFFFC93C);
+		g.text(this.font, "Góc 1: " + pos1Text, bx + 8, by + 22, 0xFFECECEC);
+		g.text(this.font, "Góc 2: " + pos2Text, bx + 8, by + 34, 0xFFECECEC);
+		g.text(this.font, "Vật liệu: " + materialText, bx + 8, by + 46, 0xFF9FE7FF);
+		g.text(this.font, statusText, bx + 128, by + 46, 0xFF37D06C);
+		g.text(this.font, "Chọn 2 góc bằng Rìu, rồi bấm nút",
 			bx + 8, by + PANEL_H - 12, 0xFF90A0B5);
 	}
 
@@ -118,7 +117,7 @@ public class EditPanelScreen extends Screen {
 		materialText = p.material();
 		statusText = (p.hasCopy() ? "Copy OK" : "Copy -- ") + "  " + (p.hasUndo() ? "Undo OK" : "Undo --");
 		if (p.open()) {
-			Minecraft.getInstance().setScreen(new EditPanelScreen());
+			Minecraft.getInstance().setScreenAndShow(new EditPanelScreen());
 		}
 	}
 

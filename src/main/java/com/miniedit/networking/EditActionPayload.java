@@ -3,9 +3,9 @@ package com.miniedit.networking;
 import com.miniedit.MiniEdit;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /** Client -> server action request. */
 public record EditActionPayload(byte op, String material) implements CustomPacketPayload {
@@ -20,10 +20,10 @@ public record EditActionPayload(byte op, String material) implements CustomPacke
 
 	public static final CustomPacketPayload.Type<EditActionPayload> TYPE =
 		new CustomPacketPayload.Type<>(
-			ResourceLocation.fromNamespaceAndPath(MiniEdit.MOD_ID, "action"));
+			Identifier.fromNamespaceAndPath(MiniEdit.MOD_ID, "action"));
 
-	public static final PacketCodec<ByteBuf, EditActionPayload> CODEC = PacketCodec.of(
-		(payload, buf) -> {
+	public static final StreamCodec<ByteBuf, EditActionPayload> CODEC = StreamCodec.of(
+		(buf, payload) -> {
 			buf.writeByte(payload.op());
 			buf.writeUtf(payload.material(), 256);
 		},

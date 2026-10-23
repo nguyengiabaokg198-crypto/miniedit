@@ -11,6 +11,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.item.ItemStack;
 
 public final class MiniEditCommands {
@@ -19,7 +20,7 @@ public final class MiniEditCommands {
 	public static void init() {
 		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
 			dispatcher.register(Commands.literal("miniedit")
-				.requires(src -> src.hasPermission(2))
+				.requires(src -> src.permissions().hasPermission(Permissions.COMMANDS_MODERATOR))
 				.then(Commands.literal("kit").executes(ctx -> giveKit(ctx.getSource())))
 				.then(Commands.literal("debugtest").executes(ctx -> debugTest(ctx.getSource())))));
 	}

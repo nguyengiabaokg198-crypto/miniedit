@@ -3,9 +3,9 @@ package com.miniedit.networking;
 import com.miniedit.MiniEdit;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
 /** Server -> client session state (also used to open the panel). */
 public record EditStatePayload(
@@ -16,10 +16,10 @@ public record EditStatePayload(
 
 	public static final CustomPacketPayload.Type<EditStatePayload> TYPE =
 		new CustomPacketPayload.Type<>(
-			ResourceLocation.fromNamespaceAndPath(MiniEdit.MOD_ID, "state"));
+			Identifier.fromNamespaceAndPath(MiniEdit.MOD_ID, "state"));
 
-	public static final PacketCodec<ByteBuf, EditStatePayload> CODEC = PacketCodec.of(
-		(p, buf) -> {
+	public static final StreamCodec<ByteBuf, EditStatePayload> CODEC = StreamCodec.of(
+		(buf, p) -> {
 			buf.writeBoolean(p.open());
 			buf.writeBoolean(p.pos1Set());
 			buf.writeInt(p.x1());
