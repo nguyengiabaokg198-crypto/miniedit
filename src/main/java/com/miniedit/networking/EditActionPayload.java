@@ -3,6 +3,7 @@ package com.miniedit.networking;
 import com.miniedit.MiniEdit;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
@@ -25,9 +26,9 @@ public record EditActionPayload(byte op, String material) implements CustomPacke
 	public static final StreamCodec<ByteBuf, EditActionPayload> CODEC = StreamCodec.of(
 		(buf, payload) -> {
 			buf.writeByte(payload.op());
-			buf.writeUtf(payload.material(), 256);
+			ByteBufCodecs.STRING_UTF8.encode(buf, payload.material());
 		},
-		buf -> new EditActionPayload(buf.readByte(), buf.readUtf(256)));
+		buf -> new EditActionPayload(buf.readByte(), ByteBufCodecs.STRING_UTF8.decode(buf)));
 
 	@Override
 	public CustomPacketPayload.Type<EditActionPayload> type() {

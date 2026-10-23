@@ -3,6 +3,7 @@ package com.miniedit.networking;
 import com.miniedit.MiniEdit;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
@@ -29,7 +30,7 @@ public record EditStatePayload(
 			buf.writeInt(p.x2());
 			buf.writeInt(p.y2());
 			buf.writeInt(p.z2());
-			buf.writeUtf(p.material(), 128);
+			ByteBufCodecs.STRING_UTF8.encode(buf, p.material());
 			buf.writeBoolean(p.hasCopy());
 			buf.writeBoolean(p.hasUndo());
 		},
@@ -37,7 +38,7 @@ public record EditStatePayload(
 			buf.readBoolean(),
 			buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
 			buf.readBoolean(), buf.readInt(), buf.readInt(), buf.readInt(),
-			buf.readUtf(128), buf.readBoolean(), buf.readBoolean()));
+			ByteBufCodecs.STRING_UTF8.decode(buf), buf.readBoolean(), buf.readBoolean()));
 
 	@Override
 	public CustomPacketPayload.Type<EditStatePayload> type() {
