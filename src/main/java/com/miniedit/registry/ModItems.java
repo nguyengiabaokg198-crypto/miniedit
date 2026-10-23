@@ -16,17 +16,18 @@ import net.minecraft.world.item.Rarity;
 public final class ModItems {
 	private ModItems() {}
 
-	private static Item register(String path, Item item) {
+	private static Item register(String path, java.util.function.UnaryOperator<Item.Properties> settings) {
 		ResourceKey<Item> key = ResourceKey.create(Registries.ITEM,
 			Identifier.fromNamespaceAndPath(MiniEdit.MOD_ID, path));
+		Item item = new Item(settings.apply(new Item.Properties()).setId(key));
 		Registry.register(BuiltInRegistries.ITEM, key, item);
 		return item;
 	}
 
 	public static final Item EDIT_AXE = register("edit_axe",
-		new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+		p -> p.stacksTo(1).rarity(Rarity.RARE));
 	public static final Item EDIT_PANEL = register("edit_panel",
-		new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
+		p -> p.stacksTo(1).rarity(Rarity.RARE));
 
 	public static final ResourceKey<CreativeModeTab> TAB_KEY = ResourceKey.create(
 		Registries.CREATIVE_MODE_TAB,
