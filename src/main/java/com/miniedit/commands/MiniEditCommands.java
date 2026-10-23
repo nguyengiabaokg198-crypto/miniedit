@@ -1,6 +1,8 @@
 package com.miniedit.commands;
 
 import com.miniedit.MiniEdit;
+
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.miniedit.edit.RegionEdit;
 import com.miniedit.registry.ModItems;
 
@@ -25,7 +27,7 @@ public final class MiniEditCommands {
 				.then(Commands.literal("debugtest").executes(ctx -> debugTest(ctx.getSource())))));
 	}
 
-	private static int giveKit(CommandSourceStack source) {
+	private static int giveKit(CommandSourceStack source) throws CommandSyntaxException {
 		ServerPlayer player = source.getPlayerOrException();
 		player.getInventory().add(new ItemStack(ModItems.EDIT_AXE));
 		player.getInventory().add(new ItemStack(ModItems.EDIT_PANEL));
